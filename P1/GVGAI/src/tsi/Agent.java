@@ -3,8 +3,6 @@ package tsi;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import com.sun.org.apache.bcel.internal.generic.Type;
-
 import core.game.Observation;
 import core.game.StateObservation;
 import core.player.AbstractPlayer;
@@ -16,6 +14,7 @@ public class Agent extends AbstractPlayer {
 	Vector2d fescala;
 	Vector2d portal;
 	Vector2d gema;
+	ArrayList<ArrayList<Integer>> mapa = new ArrayList<ArrayList<Integer>>();
 
 	
     public Agent(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
@@ -25,14 +24,23 @@ public class Agent extends AbstractPlayer {
       
         //Se crea una lista de observaciones de portales, ordenada por cercania al avatar
         ArrayList<Observation>[] posiciones = stateObs.getPortalsPositions(stateObs.getAvatarPosition());
-        //Seleccionamos el portal mas proximo
+//        //Seleccionamos el portal mas proximo
         ArrayList<Observation>[] gemas = stateObs.getResourcesPositions(stateObs.getAvatarPosition());
-        gema = gemas[0].get(0).position;
-        portal = posiciones[0].get(0).position;
-        portal = gema;
-        portal.x = Math.floor(portal.x / fescala.x);
-        portal.y = Math.floor(portal.y / fescala.y);
-
+        
+        ArrayList<Observation>[][] grid = stateObs.getObservationGrid();
+        for(int i = 0; i < stateObs.getObservationGrid().length; i++) {
+        	mapa.add(new ArrayList<Integer>());
+        	for(int j = 0 ; j < stateObs.getObservationGrid()[0].length; j++) {
+        		if(!stateObs.getObservationGrid()[i][j].isEmpty()) {
+//	        		System.out.println("In "+i +"||"+j);
+//	        		System.out.println(grid[i][j].get(0).category);
+	        		mapa.get(i).add(grid[i][j].get(0).category);
+        		}
+        		else {
+	        		mapa.get(i).add(9);
+        		}
+        	}
+        }
     }
     
     public void init(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
@@ -41,7 +49,28 @@ public class Agent extends AbstractPlayer {
 
     public Types.ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
         //Posicion del avatar
-        portal = (stateObs.getResourcesPositions(stateObs.getAvatarPosition()))[0].get(0).position;
+//        for(int i = 0; i < stateObs.getObservationGrid().length; i++)
+//        	for(int j = 0 ; j < stateObs.getObservationGrid()[0].length; j++) {
+//        		if(!stateObs.getObservationGrid()[i][j].isEmpty()) {
+//	        		System.out.println("In "+i +"||"+j);
+//	        		System.out.println(stateObs.getObservationGrid()[i][j]);
+//        		}
+//        	}
+//    	System.out.println(mapa.get(0).size());
+
+        for(int j = 0; j < stateObs.getObservationGrid()[0].length; j++) {
+        	for(int i = 0; i < stateObs.getObservationGrid().length; i++) {
+        		System.out.print(mapa.get(i).get(j)+", ");
+            }
+            System.out.println();
+        }
+		System.out.println("-------------------------------------------------");
+
+        if(stateObs.getResourcesPositions(stateObs.getAvatarPosition()) != null)
+        	portal = (stateObs.getResourcesPositions(stateObs.getAvatarPosition()))[0].get(0).position;
+    	else
+        	portal = (stateObs.getPortalsPositions(stateObs.getAvatarPosition()))[0].get(0).position;
+
         portal.x = Math.floor(portal.x / fescala.x);
         portal.y = Math.floor(portal.y / fescala.y);
         Vector2d avatar =  new Vector2d(stateObs.getAvatarPosition().x / fescala.x, 
