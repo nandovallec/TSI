@@ -15,6 +15,8 @@ import tools.Vector2d;
 public class Agent extends AbstractPlayer {
 	Vector2d fescala;
 	Vector2d portal;
+	Vector2d gema;
+
 	
     public Agent(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
 		//Calculamos el factor de escala entre mundos (pixeles -> grid)
@@ -24,9 +26,13 @@ public class Agent extends AbstractPlayer {
         //Se crea una lista de observaciones de portales, ordenada por cercania al avatar
         ArrayList<Observation>[] posiciones = stateObs.getPortalsPositions(stateObs.getAvatarPosition());
         //Seleccionamos el portal mas proximo
+        ArrayList<Observation>[] gemas = stateObs.getResourcesPositions(stateObs.getAvatarPosition());
+        gema = gemas[0].get(0).position;
         portal = posiciones[0].get(0).position;
+        portal = gema;
         portal.x = Math.floor(portal.x / fescala.x);
         portal.y = Math.floor(portal.y / fescala.y);
+
     }
     
     public void init(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
@@ -35,6 +41,9 @@ public class Agent extends AbstractPlayer {
 
     public Types.ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
         //Posicion del avatar
+        portal = (stateObs.getResourcesPositions(stateObs.getAvatarPosition()))[0].get(0).position;
+        portal.x = Math.floor(portal.x / fescala.x);
+        portal.y = Math.floor(portal.y / fescala.y);
         Vector2d avatar =  new Vector2d(stateObs.getAvatarPosition().x / fescala.x, 
         		stateObs.getAvatarPosition().y / fescala.y);
         
