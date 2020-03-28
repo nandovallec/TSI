@@ -47,7 +47,11 @@ public class Test {
 //		ArcadeMachine.playOneGame(game, level1, recordActionsFile, seed);
 
 		// 2. This plays a game in a level by the controller.
-		String controlador = "tsi.Agent";
+		String controlador="";
+		if (levelIdx == 5)
+			controlador = "tsi.Agent1";
+		else if(levelIdx == 6)
+			controlador = "tsi.Agent2";
 		boolean visuals = true;
 		ArcadeMachine.runOneGame(game, level1, visuals, controlador, recordActionsFile, seed, 0);
 
