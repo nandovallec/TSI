@@ -10,6 +10,8 @@ import tools.ElapsedCpuTimer;
 import tools.Pair;
 import tools.Vector2d;
 
+import javax.swing.*;
+
 //0 is up
 //1 is right
 //2 is down
@@ -19,50 +21,186 @@ public class Agent2 extends AbstractPlayer {
     Vector2d fescala;
     PairInteger portal = new PairInteger(0,0);;
     //	Node pos_actual = new Node(-1,-1,1);
-    Stack<Types.ACTIONS> devolver = new Stack<Types.ACTIONS>();
+    Stack<Types.ACTIONS> []devolver = new Stack[12];
+    int devolver_index = 0;
     int [][] mapa;
     PairInteger [] gemas;
     PairInteger pos_actual = new PairInteger(0,0);
     int [] order_search = new int[12];
 
-    int[] orderGemas(){
-        int [] result = new int[10];
+    void orderGemas(){
         int [] index = new int[12];
         int [][] dist = new int[12][12];
-        for(int i = 0; i < 11; i++){
+        ArrayList<Integer> op_path =  new ArrayList<Integer>();
+        for(int i = 0; i < 12; i++){
             index[i] = i;
-            for(int j = i+1; j< 10; j++){
+            dist[i][i] = 9999;
+            for(int j = i+1; j< 12; j++){
                 int row_dif = Math.abs(gemas[i].row - gemas[j].row);
                 int col_dif = Math.abs(gemas[i].col - gemas[j].col);
 
-                dist[i][j] = (int) (row_dif*1.5 + col_dif*1.5);
+//                int d = (int) (row_dif*1.5 + col_dif*1.5);
+                int d = (int) (row_dif + col_dif);
+
+                dist[i][j] = d;
+                dist[j][i] = d;
             }
         }
         int result_index = 0;
-        int min_index = 0;
+
         index[0] = -1;
         index[11] = -1;
-        for(int  i = 1; i < index.length-1; i++){
-            if(dist[0][i] < dist[0][min_index])
-                min_index = i;
-        }
-        index[min_index] = -1;
-        result[result_index] = min_index;
-        result_index++;
 
+        int selected = 0;
+        int min_index = selected;
 
-
-        
-
-        for(int i =  0; i < dist.length; i++){
-            for(int j  = 0; j < dist[0].length; j++){
-                System.out.print(dist[i][j]+", ");
+        order_search[0] = 0;
+        order_search[order_search.length-1] = order_search.length-1;
+        for(int w = 1; w < index.length-1; w++) {
+            for (int i = 1; i < index.length - 1; i++) {
+                if (index[i] != -1 && dist[selected][i] < dist[selected][min_index])
+                    min_index = i;
             }
-            System.out.println("");
+            index[selected] = -1;
+            order_search[w] = min_index;
+            selected = min_index;
+//            System.out.println(w);
         }
+        for( int k = 0; k < 40000; k++) {
+        op_path.clear();
+        //https://utd-ir.tdl.org/bitstream/handle/10735.1/2637/ECS-TR-EE-Vardhan-310316.85.pdf?sequence=7&isAllowed=y
+//http://read.pudn.com/downloads194/ebook/911571/ebooks/Ernesto%20de%20Queiros%20Vieira%20Martins%20&%20Marta%20Margarida%20Braz%20Pascoal/martins00new.pdf
+//        Yen's algorithm, implementation of k shortes path routing
+        op_path.add(0);
+        op_path.add(1);
+        op_path.add(gemas.length-1);
+        Integer []ex_ind = {2,3,4,5,6,7,8,9,10};
+//        Integer []ex_ind = {7,10,2,3,5,9,4,6,8};
 
-        return result;
+            List<Integer> list = Arrays.asList(ex_ind);
+            Collections.shuffle(list);
+            list.toArray(ex_ind);
+//        for(int i  = 0; i < 9; i++)
+//            System.out.print(", "+ex_ind[i]);
+//        System.out.println("");
+
+            for (int w = 0; w < gemas.length - 3; w++) {
+//            int insertingIndex = w+2;
+                int insertingIndex = ex_ind[w];
+//            System.out.println(ex_ind[w]);
+
+                int best_index = 1;
+                int best_dist = dist[0][insertingIndex] + dist[insertingIndex][op_path.get(1)];
+//            if(insertingIndex == 6)
+//                System.out.println(best_dist);
+                for (int i = 1; i < op_path.size() - 1; i++) {
+                    int d = dist[op_path.get(i)][insertingIndex] + dist[insertingIndex][op_path.get(i + 1)];
+                    if (d < best_dist) {
+                        best_dist = d;
+                        best_index = i + 1;
+//                    if(insertingIndex == 6) {
+//                        System.out.println("New best: "+ d+"   ind "+best_dist);
+//                    }
+                    }
+                }
+//            System.out.println("Añado "+insertingIndex+" en "+best_index);
+                op_path.add(best_index, insertingIndex);
+            }
+
+        }
+//        La distancia añadiendo 1 a 1 es de 129
+//        La mejor distancia (optima) es de 114
+            //        CAMINO OPTIMO
+            int[] ex = {0, 10, 7, 8, 9, 6, 5, 4, 1, 3, 2, 11};
+            order_search = ex;
+//        System.out.println("");
+//        System.out.println(op_path.toString());
+            int op_dist = 0;
+            int no_dist = 0;
+            for (int i = 0; i < 11; i++) {
+                op_dist += dist[op_path.get(i)][op_path.get(i + 1)];
+                no_dist += dist[order_search[i]][order_search[i + 1]];
+                order_search[i] = op_path.get(i);
+//            order_search[i] = ex[i];
+            }
+//        System.out.println("Old Dist: "+ no_dist);
+            System.out.println("New Dist: " + op_dist);
+
+//        for(int i = 0 ; i < order_search.length;i++){
+//            System.out.println("Gema: "+ order_search[i]+ " =   "+gemas[order_search[i]].row+", "+gemas[order_search[i]].col);
+//        }
+
+//        CAMINO OPTIMO
+//        int [] ex = {0,10,7,8,9,6,5,4,1,3,2,11};
+//        order_search = ex;
+//        System.out.println("");
+
+
+
+
+//        for(int i =  0; i < dist.length; i++){
+//            for(int j  = 0; j < dist[0].length; j++){
+//                System.out.print(dist[i][j]+", ");
+//            }
+//            System.out.println("");
+//        }
+
     }
+
+//    void orderGemas(){
+//        int [] result = new int[10];
+//        int [] index = new int[12];
+//        int [][] dist = new int[12][12];
+//        for(int i = 0; i < 12; i++){
+//            index[i] = i;
+//            dist[i][i] = 9999;
+//            for(int j = i+1; j< 12; j++){
+//                int row_dif = Math.abs(gemas[i].row - gemas[j].row);
+//                int col_dif = Math.abs(gemas[i].col - gemas[j].col);
+//
+//                int d = (int) (row_dif*1.5 + col_dif*1.5);
+//                dist[i][j] = d;
+//                dist[j][i] = d;
+//            }
+//        }
+//        int result_index = 0;
+//
+//        index[0] = -1;
+//        index[11] = -1;
+//
+//        int selected = 0;
+//        int min_index = selected;
+//
+//        order_search[0] = 0;
+//        order_search[order_search.length-1] = order_search.length-1;
+//        for(int w = 1; w < index.length-1; w++) {
+//            for (int i = 1; i < index.length - 1; i++) {
+//                if (index[i] != -1 && dist[selected][i] < dist[selected][min_index])
+//                    min_index = i;
+//            }
+//            index[selected] = -1;
+//            order_search[w] = min_index;
+//            selected = min_index;
+//            System.out.println(w);
+//        }
+//
+//        for(int i = 0 ; i < order_search.length;i++){
+//            System.out.println("Gema: "+ order_search[i]+ " =   "+gemas[order_search[i]].row+", "+gemas[order_search[i]].col);
+//        }
+//
+//        System.out.println("");
+//
+//
+//
+//
+//        for(int i =  0; i < dist.length; i++){
+//            for(int j  = 0; j < dist[0].length; j++){
+//                System.out.print(dist[i][j]+", ");
+//            }
+//            System.out.println("");
+//        }
+//
+//    }
 
     // Node class for convienience
     static class PairInteger {
@@ -108,7 +246,7 @@ public class Agent2 extends AbstractPlayer {
 
     }
 
-    static class AStar {
+    class AStar {
         private final PriorityQueue<Node> open;
         private final Set<Node> closed;
         //		private final List<PairInteger> path;
@@ -116,8 +254,8 @@ public class Agent2 extends AbstractPlayer {
         private final int[][] maze;
         private int[][] directions;
         private Node now;
-        private final int rowStart;
-        private final int colStart;
+        int rowStart;
+        int colStart;
         private int rowEnd, colEnd;
         int it = 0;
 
@@ -140,6 +278,18 @@ public class Agent2 extends AbstractPlayer {
             this.colStart = col;
         }
 
+        public void newStart(int row, int col, int dir) {
+            this.rowStart = row;
+            this.colStart = col;
+            directions[row][col] = dir;
+            open.clear();
+            closed.clear();
+            path.clear();
+            this.now = new Node(row, col, 0, 0);
+
+
+        }
+
         /*
          ** Finds path to rowEnd/colEnd or returns null
          **
@@ -147,14 +297,14 @@ public class Agent2 extends AbstractPlayer {
          ** @param (int) colEnd
          ** @return (List<Node> | null) the path
          */
-        public Pair<Stack<Types.ACTIONS>, Integer> findPathTo(int rowEnd, int colEnd) {
+        public int findPathTo(int rowEnd, int colEnd, int stack_index) {
             this.rowEnd = rowEnd;
             this.colEnd = colEnd;
             this.closed.add(this.now);
             addNeigborsToOpenList();
             while (this.now.row != this.rowEnd || this.now.col != this.colEnd) {
                 if (this.open.isEmpty()) { // Nothing to examine
-                    return null;
+                    return -1;
                 }
                 this.now = this.open.poll(); // get first node (lowest f score)
 //            this.open.remove(0); // remove it
@@ -170,42 +320,42 @@ public class Agent2 extends AbstractPlayer {
                 int new_d;
                 if (d == 0) {
                     back_row += 1;
-                    path.push(Types.ACTIONS.ACTION_UP);
+                    devolver[stack_index].push(Types.ACTIONS.ACTION_UP);
                     new_d = directions[back_row][back_col];
                     if(new_d != d){
-                        path.push(Types.ACTIONS.ACTION_UP);
+                        devolver[stack_index].push(Types.ACTIONS.ACTION_UP);
 
                     }
                 }else if (d == 2) {
                     back_row -= 1;
-                    path.push(Types.ACTIONS.ACTION_DOWN);
+                    devolver[stack_index].push(Types.ACTIONS.ACTION_DOWN);
                     new_d = directions[back_row][back_col];
                     if(new_d != d){
-                        path.push(Types.ACTIONS.ACTION_DOWN);
+                        devolver[stack_index].push(Types.ACTIONS.ACTION_DOWN);
 
                     }
                 }else if (d == 1) {
                     back_col -= 1;
-                    path.push(Types.ACTIONS.ACTION_RIGHT);
+                    devolver[stack_index].push(Types.ACTIONS.ACTION_RIGHT);
                     new_d = directions[back_row][back_col];
                     if(new_d != d){
-                        path.push(Types.ACTIONS.ACTION_RIGHT);
+                        devolver[stack_index].push(Types.ACTIONS.ACTION_RIGHT);
 
                     }
                 }else{
                     back_col += 1;
-                    path.push(Types.ACTIONS.ACTION_LEFT);
+                    devolver[stack_index].push(Types.ACTIONS.ACTION_LEFT);
                     new_d = directions[back_row][back_col];
                     if(new_d != d){
-                        path.push(Types.ACTIONS.ACTION_LEFT);
+                        devolver[stack_index].push(Types.ACTIONS.ACTION_LEFT);
 
                     }
                 }
 //				this.path.add(0, new PairInteger(back_row, back_col));
 //            System.out.println(back_row+" , "+back_col);
             }
-            System.out.println("Total: " + it);
-            return new Pair<Stack<Types.ACTIONS>, Integer>(this.path, directions[rowEnd][colEnd]);
+//            System.out.println("Total: " + it);
+            return directions[rowEnd][colEnd];
         }
 
         /*
@@ -213,7 +363,7 @@ public class Agent2 extends AbstractPlayer {
          **
          ** @return (bool) NeightborInListFound
          */
-        private static boolean findNeighborInList(List<Node> array, Node node) {
+        private boolean findNeighborInList(List<Node> array, Node node) {
             return array.stream().anyMatch((n) -> (n.col == node.col && n.row == node.row));
         }
 
@@ -277,13 +427,17 @@ public class Agent2 extends AbstractPlayer {
 
 
 
-    public Agent2(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
+    public Agent2(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) throws InterruptedException {
+        long start = System.nanoTime();
+
         System.out.println("First: "+ elapsedTimer.elapsedMillis());
         gemas = new PairInteger[12];
         //Calculamos el factor de escala entre mundos (pixeles -> grid)
         fescala = new Vector2d(stateObs.getWorldDimension().width / stateObs.getObservationGrid().length ,
                 stateObs.getWorldDimension().height / stateObs.getObservationGrid()[0].length);
 
+        for (int i=0; i<11; ++i)
+            devolver[i] = new Stack<Types.ACTIONS>();
         //Se crea una lista de observaciones de portales, ordenada por cercania al avatar
 //        ArrayList<Observation>[] posiciones = stateObs.getPortalsPositions(stateObs.getAvatarPosition());
 //        //Seleccionamos el portal mas proximo
@@ -308,7 +462,7 @@ public class Agent2 extends AbstractPlayer {
                         portal.row = j;
                         portal.col = i;
                     }else if(categoria == 1){
-                        System.out.println(n_gemas);
+//                        System.out.println(n_gemas);
                         gemas[n_gemas] = new PairInteger(j, i);
                         n_gemas++;
                     }
@@ -319,12 +473,12 @@ public class Agent2 extends AbstractPlayer {
             }
         }
 
-        for (int row = 0; row < mapa.length; row++) {
-            for (int col = 0; col < mapa[0].length; col++) {
-                System.out.print(mapa[row][col] + ", ");
-            }
-            System.out.println();
-        }
+//        for (int row = 0; row < mapa.length; row++) {
+//            for (int col = 0; col < mapa[0].length; col++) {
+//                System.out.print(mapa[row][col] + ", ");
+//            }
+//            System.out.println();
+//        }
 
         int dir = (int)stateObs.getAvatarOrientation().x;
         if (dir == -1){
@@ -337,13 +491,23 @@ public class Agent2 extends AbstractPlayer {
         }
         System.out.println(portal.row +"  "+portal.col);
         AStar as = new AStar(mapa, pos_actual.row, pos_actual.col, dir);
-        System.out.println("DD: "+ elapsedTimer.elapsedMillis());
-        order_search = orderGemas();
-        Pair<Stack<Types.ACTIONS>, Integer> res = as.findPathTo(portal.row, portal.col);
-        devolver = res.first;
+        System.out.println("Ord1: "+ elapsedTimer.elapsedMillis());
+//        for(int i = 0; i < 30; i++)
+            orderGemas();
+//        Thread.sleep(10000);
+        System.out.println("Ord2: "+        elapsedTimer.remainingTimeMillis());
+
+        Pair<Stack<Types.ACTIONS>, Integer> res;
+        for(int i = 0; i < 11; i++) {
+            as.newStart(gemas[order_search[i]].row, gemas[order_search[i]].col, dir);
+            dir = as.findPathTo(gemas[order_search[i+1]].row, gemas[order_search[i+1]].col, i);
+        }
 
         System.out.println("First: "+ elapsedTimer.elapsedMillis());
-
+        System.out.println("Ord3: "+        elapsedTimer.remainingTimeMillis());
+        long finish = System.nanoTime();
+        double timeElapsed = (double)(finish - start)/(double)1000000;
+        System.out.println("Total time: "+timeElapsed);
     }
 
     public void init(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
@@ -377,9 +541,14 @@ public class Agent2 extends AbstractPlayer {
 //		Vector2d avatar = new Vector2d(stateObs.getAvatarPosition().x / fescala.x,
 //				stateObs.getAvatarPosition().y / fescala.y);
 
-        if(!devolver.empty())
-            return devolver.pop();
-        return Types.ACTIONS.ACTION_RIGHT;
+        if (!devolver[devolver_index].empty()){
+            return devolver[devolver_index].pop();
+        }else if(devolver_index < devolver.length-1) {
+            devolver_index++;
+            if (!devolver[devolver_index].empty())
+                return devolver[devolver_index].pop();
+        }
+        return Types.ACTIONS.ACTION_NIL;
 
     }
 }

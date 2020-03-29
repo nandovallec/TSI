@@ -50,7 +50,7 @@ public class Test {
 		String controlador="";
 		if (levelIdx == 5)
 			controlador = "tsi.Agent1";
-		else if(levelIdx == 6)
+		else
 			controlador = "tsi.Agent2";
 		boolean visuals = true;
 		ArcadeMachine.runOneGame(game, level1, visuals, controlador, recordActionsFile, seed, 0);
