@@ -184,9 +184,8 @@ public class Agent1 extends AbstractPlayer {
 		private double distance(int drow, int dcol) {
 			int row_dif = Math.abs(this.now.row + drow - this.rowEnd);
 			int col_dif = Math.abs(this.now.col + dcol - this.colEnd);
-//			if()
-//			return 0;
-			return row_dif*1.5 + col_dif*1.5; // else return "Manhattan distance"
+
+			return row_dif*1 + col_dif*1; // else return "Manhattan distance"
 		}
 
 		private void addNeigborsToOpenList() {
@@ -329,7 +328,7 @@ public class Agent1 extends AbstractPlayer {
 
 		if(!devolver.empty())
 			return devolver.pop();
-		return Types.ACTIONS.ACTION_RIGHT;
+		return Types.ACTIONS.ACTION_NIL;
 
 	}
 }

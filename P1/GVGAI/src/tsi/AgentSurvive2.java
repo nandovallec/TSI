@@ -10,8 +10,12 @@ import tools.ElapsedCpuTimer;
 import tools.Pair;
 import tools.Vector2d;
 
+//0 is up
+//1 is right
+//2 is down
+//3 is left
 
-public class Agent2 extends AbstractPlayer {
+public class AgentSurvive2 extends AbstractPlayer {
     /**
      * Path Calculator
      */
@@ -28,9 +32,9 @@ public class Agent2 extends AbstractPlayer {
     int [][] mapa;
     int n_monster = 0;
     boolean hay_monster = false;
-    PairInteger [] monster;
+    PairInteger[] monster;
     int n_gemas;
-    PairInteger [] gemas;
+    PairInteger[] gemas;
     PairInteger pos_actual = new PairInteger(0,0);
     PairInteger portal = new PairInteger(0,0);
 
@@ -117,18 +121,13 @@ public class Agent2 extends AbstractPlayer {
             }
         }
 
-        // Use branch and bound method for every possible start
+        // Use branch and bound method
         boolean [] chosen = new boolean[n_gemas+2];
-
-        // Set partial solution to 12 maximum (10 gems plus initial position and exit) or every gem
-        int tam_sol = n_gemas+2;
-        if(tam_sol > 12) tam_sol=12;
-
-        int [] sol = new int[tam_sol];
-//        sol[n_gemas+1] = n_gemas+1;
+        int [] sol = new int[n_gemas+2];
+        sol[n_gemas+1] = n_gemas+1;
         chosen[0] = true;
         chosen[chosen.length-1] = true;
-        sol[sol.length-1] = gemas.length-1;
+        sol[sol.length-1] = sol[sol.length-1];
         order_search = sol.clone();
         for(int i = 1; i < indexes.length-1; i++){
             int sel_index = indexes[i];
@@ -221,7 +220,7 @@ public class Agent2 extends AbstractPlayer {
         /**
          * Variable for heuristic. The greater the safer but it will take longer.
          */
-        int heuristic_limit = 2;
+        int heuristic_limit = 6;
 
 
         /**
@@ -351,18 +350,15 @@ public class Agent2 extends AbstractPlayer {
          * Add the possible neighbours to the queue
          */
         private void addNeigborsToOpenList() {
-
             Node node;
-            // Get all neighbours
             for (int col = -1; col <= 1; col++) {
                 for (int row = -1; row <= 1; row++) {
-
                     if (col != 0 && row != 0) {
                         continue; // skip if it is a diagonal movement
                     }
 
-                    // Get neighbour's orientation
                     int dire = 3;
+
                     if (col == 1) dire = 1;
                     else if (row == 1) dire = 2;
                     else if (row == -1) dire = 0;
@@ -373,9 +369,7 @@ public class Agent2 extends AbstractPlayer {
                     if (directions[this.now.row][this.now.col] != dire)
                         ex = 2;
                     node = new Node(this.now.row + row, this.now.col + col, this.now.g + 1, this.distance(row, col));
-
-
-                    if ((col != 0 || row != 0) // not original node
+                    if ((col != 0 || row != 0) // not this.now
                             && this.now.col + col >= 0 && this.now.col + col < this.maze[0].length // check maze boundaries
                             && this.now.row + row >= 0 && this.now.row + row < this.maze.length
                             && this.maze[this.now.row + row][this.now.col + col] != 4 // check if square is walkable
@@ -395,13 +389,12 @@ public class Agent2 extends AbstractPlayer {
                                     if(man == 0)
                                         node.h += 100*4;
                                     else
-                                        node.h += 100*(2/man);
+                                        node.h += 100*(2.0/man);
 
                                     node.g +=ex;
                                 }
                             }
                         }
-
                         // Add node to the list of open nodes
                         this.open.add(node);
                     }
@@ -413,34 +406,35 @@ public class Agent2 extends AbstractPlayer {
 
 
 
-    public Agent2(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
+    public AgentSurvive2(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
         // Set scala
         fescala = new Vector2d(stateObs.getWorldDimension().width / stateObs.getObservationGrid().length ,
                 stateObs.getWorldDimension().height / stateObs.getObservationGrid()[0].length);
 
-        // Set variables for special objects
-        if(stateObs.getResourcesPositions() != null)
-            n_gemas = stateObs.getResourcesPositions()[0].size();
-        else
-            n_gemas = 0;
+        // Set variables for special objects and create virtual gems
+        n_gemas = 4;
 
-        int tam_sol = n_gemas;
-        if( tam_sol > 10) tam_sol = 10;
-        gemas = new PairInteger[n_gemas+2];
-        devolver = new Stack[tam_sol+1];
-        order_search = new int [tam_sol+2];
+        gemas = new AgentSurvive2.PairInteger[n_gemas+2];
+        devolver = new Stack[n_gemas+1];
+        order_search = new int [n_gemas+2];
+
         indexes = new int [n_gemas+2];
-
         for (int i = 0; i < n_gemas+1; ++i){
-            if(i < tam_sol+1)
-                devolver[i] = new Stack<Types.ACTIONS>();
+            devolver[i] = new Stack<Types.ACTIONS>();
             indexes[i] = i;
         }
         indexes[n_gemas+1] = n_gemas+1;
 
         ArrayList<Observation>[][] grid = stateObs.getObservationGrid();
         mapa = new int[grid[0].length][grid.length];
-        int num_gemas_encontradas = 1;
+
+        // Position virtual gems at corners
+        gemas[1] = new AgentSurvive2.PairInteger(1, 1);
+        gemas[2] = new AgentSurvive2.PairInteger(1, grid.length-2);
+        gemas[3] = new AgentSurvive2.PairInteger(grid[0].length-2, grid.length-2);
+        gemas[4] = new AgentSurvive2.PairInteger(grid[0].length-2, 1);
+
+        // Iterate over the map and save the values
         for(int i = 0; i < grid.length; i++) {
             for(int j = 0 ; j < grid[0].length; j++) {
                 if(!grid[i][j].isEmpty()) {
@@ -452,9 +446,6 @@ public class Agent2 extends AbstractPlayer {
                     }else if(categoria == 2){       // Exit
                         portal.row = j;
                         portal.col = i;
-                    }else if(categoria == 1){       // Gem
-                        gemas[num_gemas_encontradas] = new PairInteger(j, i);
-                        num_gemas_encontradas++;
                     }
                 }
                 else {                              // Walkable
@@ -465,7 +456,6 @@ public class Agent2 extends AbstractPlayer {
 
         gemas[0] = pos_actual;
         gemas[n_gemas+1] = portal;
-
 
         // Check for enemies and save positions
         if(stateObs.getNPCPositions() != null){
@@ -496,13 +486,11 @@ public class Agent2 extends AbstractPlayer {
         orderGemas();
 
         // Calculate path between each gem following the order
-        for(int i = 0; i < order_search.length-1; i++) {
+        for(int i = 0; i < n_gemas+1; i++) {
             as.newStart(gemas[order_search[i]].row, gemas[order_search[i]].col, dir);
             dir = as.findPathTo(gemas[order_search[i+1]].row, gemas[order_search[i+1]].col, i);
         }
-//        System.out.println("Remaining: "+elapsedTimer.remainingTimeMillis());
-        gemas[0].col = -1;
-        gemas[0].row = -1;
+
     }
 
 
@@ -512,49 +500,13 @@ public class Agent2 extends AbstractPlayer {
         int row_actual =  (int) (actual.y/fescala.y);
         int col_actual =  (int) (actual.x/fescala.x);
 
-
-        // Check if avatar has walked on top of a gem while going for a different one
-        boolean gema_encontrada = false;
-        int ind_gema = 0;
-
-        for(int i = 1; i < gemas.length-2 && !gema_encontrada; i++){
-            PairInteger g = gemas[i];
-            if((row_actual == g.row)&&(col_actual == g.col)){
-                gema_encontrada = true;
-                ind_gema = i;
-            }
-        }
-        if(gema_encontrada){
-            boolean in_path = false;
-            int ind_search = -1;
-            for(int i = devolver_index; i < order_search.length && !in_path; i++){
-                if(ind_gema == order_search[i]) {
-                    in_path = true;
-                    ind_search = i;
-                }
-            }
-            if(in_path) {
-                for (int i = ind_search; i > devolver_index; i--) {
-                    order_search[i] = order_search[i - 1];
-                }
-            }
-            gemas[ind_gema].row = -1;
-            gemas[ind_gema].col = -1;
-            devolver_index++;
-        }
-
-
-
-
         if(hay_monster) {
             iterations++;
             // Avoid circular exchanging case if monster is close to next 2 gems
             if(unlock_change == iterations){
                 recalculate = false;
             }
-
-            // If monster is close to the actual objective gem. Skip it and go to the next one
-            int limit = 2;
+            int limit = 4;
             for (int i = 0; i < n_monster; i++) {
                 Vector2d monst = stateObs.getNPCPositions()[0].get(i).position;
                 monster[i].col = (int) (monst.x / fescala.x);
@@ -569,7 +521,6 @@ public class Agent2 extends AbstractPlayer {
                     order_search[devolver_index + 1] = order_search[devolver_index + 2];
                     order_search[devolver_index + 2] = ex;
                     unlock_change = iterations+4;
-
                 }
 
                 // Swap it for the one 2 positions ahead
@@ -577,51 +528,18 @@ public class Agent2 extends AbstractPlayer {
                     int ex = order_search[devolver_index + 1];
                     order_search[devolver_index + 1] = order_search[devolver_index + 3];
                     order_search[devolver_index + 3] = ex;
-                    unlock_change = iterations+4;
                 }
 
-                // If monster is blocking the exit or last gem, activate extreme case
-                if((Math.abs(gemas[order_search[devolver_index+1]].row - monster[i].row)<=limit) && (Math.abs(gemas[order_search[devolver_index+1]].col - monster[i].col)<=limit) && (devolver_index >= order_search.length-3)){
-                    destino_final_block = true;
+                // Swap it for the one 3 positions ahead
+                if((Math.abs(gemas[order_search[devolver_index+1]].row - monster[i].row)<=limit) && (Math.abs(gemas[order_search[devolver_index+1]].col - monster[i].col)<=limit) && (devolver_index < order_search.length-5) &&!destino_final_block) {
+                    int ex = order_search[devolver_index + 1];
+                    order_search[devolver_index + 1] = order_search[devolver_index + 4];
+                    order_search[devolver_index + 4] = ex;
                 }
 
                 recalculate = rec_extra;
             }
 
-            // Extreme case where monster is blocking exit or last gem
-            if(destino_final_block) {
-                // Generate a valid new objective close to the objective but far enough from monster
-                boolean generated = false;
-                int distance_to_objective = 7;
-                int row_gen = gemas[order_search[devolver_index+1]].row;
-                int col_gen = gemas[order_search[devolver_index+1]].col+10;
-                while(!generated){
-                    col_gen -=2;
-                    if(col_gen < 1){
-                        col_gen = gemas[order_search[devolver_index+1]].col+10;
-                        row_gen--;
-                    }
-                    if(col_gen >= 0 && col_gen < mapa[0].length // check maze boundaries
-                            && row_gen >= 0 && row_gen < mapa.length
-                            && mapa[row_gen][col_gen] != 4) {
-
-                        boolean enough_distance = true;
-                        for( int k = 0; k < n_monster; k++) {
-                            int man = Math.abs(row_gen - monster[k].row) + Math.abs(col_gen - monster[k].col); // return "Manhattan distance"
-                            if(man < distance_to_objective)
-                                enough_distance = false;
-                        }
-                        if(enough_distance)
-                            generated = true;
-                    }
-                    destino_final_block = false;
-                }
-                // Set generated position as new objective
-                devolver_index--;
-                gemas[order_search[devolver_index+1]].row = row_gen;
-                gemas[order_search[devolver_index+1]].col = col_gen;
-
-            }
 
 
             if( !((row_actual == gemas[order_search[devolver_index+1]].row) && (col_actual == gemas[order_search[devolver_index+1]].col))){
@@ -635,14 +553,13 @@ public class Agent2 extends AbstractPlayer {
                     else
                         dir = 3;
                 }
-
                 // Recalculate path to next objective taking into account new monster's positions
                 devolver[devolver_index].clear();
                 as.newStart(row_actual,col_actual, dir);
                 dir = as.findPathTo(gemas[order_search[devolver_index+1]].row, gemas[order_search[devolver_index+1]].col, devolver_index);
 
                 // Recalculate path to the next gem
-                if(devolver_index+1 < devolver.length-3) {
+                if(devolver_index+1 < devolver.length-2) {
                     devolver[devolver_index + 1].clear();
                     as.newStart(gemas[order_search[devolver_index + 1]].row, gemas[order_search[devolver_index + 1]].col, dir);
                     dir = as.findPathTo(gemas[order_search[devolver_index + 2]].row, gemas[order_search[devolver_index + 2]].col, devolver_index + 1);
@@ -655,7 +572,6 @@ public class Agent2 extends AbstractPlayer {
         if (!devolver[devolver_index].empty()){
             return devolver[devolver_index].pop();
         }else if(devolver_index < devolver.length-1) {
-            devolver_index++;
             if (!devolver[devolver_index].empty())
                 return devolver[devolver_index].pop();
         }
