@@ -8,7 +8,10 @@ array [N_PERIODOS,N_DIAS] of var 1..15: horarioAsig;
 array [N_PERIODOS,N_DIAS] of var 1..10: horarioProf;
 
 % Los A1.2 son asignaturas que se imparten en dos horas, se obliga a que A1 este justo detras de A1.2.  REC es recreo
-array [1..15] of string: ASIG = ["A1","A2","A3","A4","A5","A6","A7","A8","A9","REC","A1.2","A3.2","A4.2","5.2","8.2"];
+array [1..15] of string: ASIG = ["A1","A2","A3","A4","A5","A6","A7","A8","A9","REC","A1.2","A3.2","A4.2","A5.2","A8.2"];
+
+% Profesor para cada asignatura
+array [1..15] of int: PROF_POR_ASIG = [1,4,1,2,2,3,4,4,3,0,1,1,2,2,4];
 
 % Numero de veces que van a aparecer en el horario cada asignatura
 array [1..15] of var 1..5: HORAS = [2,2,2,2,2,2,2,1,1,5,2,2,2,2,1];
@@ -52,4 +55,4 @@ constraint forall (j in N_DIAS) ( alldifferent( [ horarioProf[i,j] | i in N_PERI
 solve satisfy;
 
 % Salida
-output [if fix(horarioAsig[i,j])!=10 then "Dia \(j) Periodo \(i) Prof\(horarioProf[i,j]) \(ASIG[fix(horarioAsig[i,j])])\t" else "\tRecreo\t\t\t" endif ++ if j==5 then "\n" else "\t" endif | i in N_PERIODOS, j in N_DIAS]
+output [if fix(horarioAsig[i,j])!=10 then "Dia \(j) Periodo \(i) Prof\(PROF_POR_ASIG[fix(horarioAsig[i,j])]) Asign: \(ASIG[fix(horarioAsig[i,j])])\t" else "\tRecreo\t\t\t" endif ++ if j==5 then "\n" else "\t" endif | i in N_PERIODOS, j in N_DIAS]
