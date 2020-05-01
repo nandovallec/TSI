@@ -1,16 +1,15 @@
-% Ejemplo: N-Reinas:
+% Ejercicio 2:
 include "globals.mzn";
-int: n = 9;
+int: digitos_posibles = 9;
+
+% Creamos array de 10 posiciones
 set of int: POS = 1..10;
-array [POS] of var 0..n: valores;
+array [POS] of var 0..digitos_posibles: valores;
 
-
-% Ataques en misma fila: no hay (cada reina ya está en filas
-% distintas gracias al modelado del problema)
-%constraint alldifferent(valores); % Ataques en columnas
-
+% Imponemos la condición sobre cada posicion del array
 constraint forall(i in POS)(count(valores, i-1) == valores[i]);
 
 solve satisfy;
 
-output [ "\(valores[i])" | i in POS];
+% Salida
+output [ "Numero resultante: "]++ ["\(valores[i])" | i in POS];

@@ -1,9 +1,9 @@
-% Ejemplo: N-Reinas:
+% Ejercicio 5:
 include "globals.mzn";
-int: n = 9;
 set of int: N_PERIODOS = 1..6;
 set of int: N_DIAS = 1..5;
 
+% Horario final de asignaturas y profesores
 array [N_PERIODOS,N_DIAS] of var 1..15: horarioAsig;
 array [N_PERIODOS,N_DIAS] of var 1..10: horarioProf;
 
@@ -49,5 +49,7 @@ constraint forall (j in N_DIAS) ( alldifferent( [ horarioAsig[i,j] | i in N_PERI
 % Cada dia un profesor solo puede impartir un bloque, salvo el prof 4 (resto de indices) el cual imparte mas
 constraint forall (j in N_DIAS) ( alldifferent( [ horarioProf[i,j] | i in N_PERIODOS ]) );
 
+solve satisfy;
 
-output [ "\(i):\(j) Prof:\(horarioProf[i,j]) Asignatura:\(ASIG[fix(horarioAsig[i,j])])\t" ++ if j==5 then "\n" else "   " endif | i in N_PERIODOS, j in N_DIAS]
+% Salida
+output [if fix(horarioAsig[i,j])!=10 then "Dia \(j) Periodo \(i) Prof\(horarioProf[i,j]) \(ASIG[fix(horarioAsig[i,j])])\t" else "\tRecreo\t\t\t" endif ++ if j==5 then "\n" else "\t" endif | i in N_PERIODOS, j in N_DIAS]
