@@ -24,6 +24,11 @@
         (faltaInvestigar ?tipo - tipoUnidades)                                  ; Se necesita ivnestigar apra desbloquear la unidad
         
 ;        (SinCaminos)
+        (reclutada ?uni - Unidades)
+
+        (construido ?edi - Edificios)
+
+        (hayEdificioEn ?loc - Localizaciones)
 
         (hayCamino ?loc1 - Localizaciones ?loc2 - Localizaciones)            ; Camino entre dos puntos
 
@@ -106,7 +111,9 @@
                  ;   (extraeRecurso ?vce ?r)
                 ;)
                 (<
+                    (+
                     (Reserva ?r)
+                     25)
                     (LimiteReserva)
                 )
             )
@@ -129,15 +136,9 @@
                 (unidadEn ?vce ?loc)                                            ; la unidad tiene que estar en la localizacion requerida
                 (not (extrayendoEn ?vce ?loc))                                  ; no puede estar ocupada extrayendo
                 
-                (not (exists (?otro - Edificios)
-                        (edificioEn ?otro ?loc)
-                      )
-                )   
+                (not(hayEdificioEn ?loc))   
                 
-                (not (exists (?otraLoc - Localizaciones)
-                        (edificioEn ?edi ?otraLoc)
-                      )
-                )
+                (not(construido ?edi))
                 
                 (exists (?tipoE - tipoEdificios)
                     (and
@@ -167,6 +168,8 @@
         :effect
             (and
                 (edificioEn ?edi ?loc)
+                (construido ?edi)
+                (hayEdificioEn ?loc)
                 (when  (edificioTipo ?edi CentroDeMando)
                            
                     (and (decrease (Reserva Mineral) 150)
@@ -199,15 +202,11 @@
     )
     
     (:action Reclutar
-        :parameters (?uniCreada - Unidades ?tipoUni - tipoUnidades ?tipoE - tipoEdificios ?loc - Localizaciones)
+        :parameters (?uniCreada - Unidades ?tipoUni - tipoUnidades  ?loc - Localizaciones)
         :precondition
             (and
                 (unidadTipo ?uniCreada ?tipoUni)                                ; la unidad creada tiene que ser de su tipo
-                (not (exists (?otraLoc - Localizaciones)
-                        (unidadEn ?uniCreada ?otraLoc)
-                      )
-                )                             
-                (puedeReclutar ?tipoE ?tipoUni)
+                (not(reclutada ?uniCreada))                             
                 (not (faltaInvestigar ?tipoUni))
                 
                 
@@ -224,8 +223,9 @@
                     )
                 )
 
-                (exists (?edi - Edificios  )
+                (exists (?edi - Edificios  ?tipoE - tipoEdificios)
                     (and
+                        (puedeReclutar ?tipoE ?tipoUni)
                         (edificioTipo ?edi ?tipoE)
                         (edificioEn ?edi ?loc)
                     )
@@ -248,6 +248,7 @@
                 )
                 )
                 (unidadEn ?uniCreada ?loc)
+                (reclutada ?uniCreada)
 
             )
     )

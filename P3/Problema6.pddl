@@ -44,7 +44,10 @@
 
         
         (edificioEn mando1 loc2_2)
+        (construido mando1)
+        (hayEdificioEn loc2_2)
         (unidadEn vce1 loc2_2)
+        (reclutada vce1)
         ;(unidadEn vce2 loc2_2)
         ;(unidadEn vce3 loc2_2)
 
