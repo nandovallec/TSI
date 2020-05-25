@@ -1,5 +1,5 @@
 ﻿(define (domain ejercicio1)
-    (:requirements :strips :typing :fluents :equality :equality)
+    (:requirements :strips :typing :fluents :equality :equality :negative-preconditions)
     (:types
         Unidades Edificios Localizaciones Recurso - object      ; Tipo de objetos
         tipoUnidades tipoEdificios tipoRecursos - constants     ; Tipos posibles de objetos
@@ -29,6 +29,8 @@
 
         (extrayendoEn ?vce - Unidades ?loc - Localizaciones)                    ; Se esta extrayendo en localizacion
 
+        (extraeRecurso ?vce - Unidades ?r -tipoRecursos)
+
         (necesita ?edi - tipoEdificios ?rec - tipoRecursos)                     ; Edificio necesita recurso
         
         (necesitaUnidad ?tipo - tipoUnidades ?rec - tipoRecursos)               ; Unidad necesita recurso
@@ -57,7 +59,7 @@
     )
 
     (:action Asignar
-        :parameters (?vce - Unidades ?loc - Localizaciones ?edi - Edificios ?r - tipoRecursos )
+        :parameters (?vce - Unidades ?loc - Localizaciones  ?r - tipoRecursos )
         :precondition                                                           ; Existe una unidad de tipo VCE en el punto, no está extrayendo, el recurso esta en la misma posicion
             (and
                 (unidadEn ?vce ?loc)
@@ -65,11 +67,20 @@
                 (not (extrayendoEn ?vce ?loc))
                 (asignadoRecursoEn ?r ?loc)
                 ;(recursoTipo ?rec ?r)
-                (or (= ?r Mineral) (and(edificioEn ?edi ?loc)(edificioTipo ?edi ExtractorGas) ))
+                (or 
+                    (= ?r Mineral) 
+                    (exists (?edi - Edificios)
+                        (and
+                            (edificioEn ?edi ?loc)
+                            (edificioTipo ?edi ExtractorGas) 
+                        )
+                    )
+                )
             )
         :effect 
             (and
                 (extrayendoEn ?vce ?loc)
+                (extraeRecurso ?vce ?r)
             )
     )
 
@@ -83,15 +94,17 @@
         :effect
             (and
                 (not (extrayendoEn ?vce ?loc))  ; desasigna el vce del recurso en el que estaba
+                (not (extraeRecurso ?vce ?r))
             )
     )
     
     (:action Recolectar
-        :parameters (?vce - Unidades ?loc - Localizaciones ?r - tipoRecursos)
+        :parameters (?r - tipoRecursos)
         :precondition                                                           ; Existe una unidad de tipo VCE en el punto, no está extrayendo, el recurso esta en la misma posicion
             (and
-                (extrayendoEn ?vce ?loc)
-                (asignadoRecursoEn ?r ?loc)
+                ;(exists (?vce - Unidades)
+                 ;   (extraeRecurso ?vce ?r)
+                ;)
                 (<
                     (Reserva ?r)
                     (LimiteReserva)
@@ -99,18 +112,17 @@
             )
         :effect 
             (and
-                (forall (?vce2 - Unidades ?loc2 - Localizaciones)
-                    (when
-                        (extrayendoEn ?vce2 ?loc2)
-                        (asignadoRecursoEn ?r ?loc2)
+                (forall (?vce - Unidades)
+                    (when (and(extraeRecurso ?vce ?r))
+                        (and(increase (Reserva ?r) 25))
                     )
                 )
-                (increase (Reserva ?r) 40)
+                
             )
     )
 
     (:action Construir
-        :parameters (?vce - Unidades ?edi - Edificios ?loc - Localizaciones ?tipoE - tipoEdificios)
+        :parameters (?vce - Unidades ?edi - Edificios ?loc - Localizaciones )
         :precondition
             (and
                 (unidadTipo ?vce VCE)                                           ; la unidad tiene que ser un VCE
@@ -127,63 +139,60 @@
                       )
                 )
                 
-                (edificioTipo ?edi ?tipoE)
-                
-                (or
-                    (and (edificioTipo ?edi CentroDeMando)
-                           (>= (Reserva Mineral) 150)
-                           (>= (Reserva Gas) 50))
-                    (and (edificioTipo ?edi Barracones)
-                           (>= (Reserva Mineral) 150))
-                    (and (edificioTipo ?edi ExtractorGas)
-                           (>= (Reserva Mineral) 75))
-                    (and (edificioTipo ?edi BahiaIngenieria)
-                           (>= (Reserva Mineral) 125))
-                    (and (edificioTipo ?edi Deposito)
-                           (>= (Reserva Mineral) 75)
-                           (>= (Reserva Gas) 25)
-                    
+                (exists (?tipoE - tipoEdificios)
+                    (and
+                        (edificioTipo ?edi ?tipoE)
+                        (or
+                            (and (edificioTipo ?edi CentroDeMando)
+                                (>= (Reserva Mineral) 150)
+                                (>= (Reserva Gas) 50))
+                            (and (edificioTipo ?edi Barracones)
+                                (>= (Reserva Mineral) 150))
+                            (and (edificioTipo ?edi ExtractorGas)
+                                (>= (Reserva Mineral) 75))
+                            (and (edificioTipo ?edi BahiaIngenieria)
+                                (>= (Reserva Mineral) 125))
+                            (and (edificioTipo ?edi Deposito)
+                                (>= (Reserva Mineral) 75)
+                                (>= (Reserva Gas) 25)
+                            
+                            )
+                        )
                     )
-                
-                
-                
                 )
+                
+
                 
             )
         :effect
             (and
                 (edificioEn ?edi ?loc)
-                (when (and (edificioTipo ?edi CentroDeMando)
-                           )
+                (when  (edificioTipo ?edi CentroDeMando)
+                           
                     (and (decrease (Reserva Mineral) 150)
                          (decrease (Reserva Gas) 50)
-                    ;(edificioEn ?edi ?loc)
                     )
                 )
-                (when (and (edificioTipo ?edi Barracones)
-                           )
+                (when  (edificioTipo ?edi Barracones)
+                           
                     (and (decrease (Reserva Mineral) 150)
-                    ;(edificioEn ?edi ?loc)
                     )
                 )
-                (when (and (edificioTipo ?edi ExtractorGas)
-                           )
+                (when  (edificioTipo ?edi ExtractorGas)
+                           
                     (and (decrease (Reserva Mineral) 75)
-                    ;(edificioEn ?edi ?loc)
                     )
                 )
-                (when (and (edificioTipo ?edi BahiaIngenieria)
-                           )
+                (when  (edificioTipo ?edi BahiaIngenieria)
+                           
                     (and (decrease (Reserva Mineral) 125)
-                    ;(edificioEn ?edi ?loc)
                     )
                 )
-                (when (and (edificioTipo ?edi Deposito)
-                        )
+                (when  (edificioTipo ?edi Deposito)
+                        
                     (and (decrease (Reserva Mineral) 75)
                     (decrease (Reserva Gas) 25)
                     (increase (LimiteReserva) 100)
-                    ;(edificioEn ?edi ?loc)
                     )
                 )
             )
