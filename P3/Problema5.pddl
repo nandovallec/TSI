@@ -42,12 +42,12 @@
         ;(unidadEn vce2 loc2_2)
         ;(unidadEn vce3 loc2_2)
 
-        (asignadoRecursoEn Mineral loc4_2)
-        (asignadoRecursoEn Mineral loc5_2)
-        (asignadoRecursoEn Mineral loc5_3)
+        (recursoEn Mineral loc4_2)
+        (recursoEn Mineral loc5_2)
+        (recursoEn Mineral loc5_3)
 
-        (asignadoRecursoEn Gas loc3_4)
-        (asignadoRecursoEn Gas loc3_5)
+        (recursoEn Gas loc3_4)
+        (recursoEn Gas loc3_5)
 
         (necesita CentroDeMando Gas)
         (necesita CentroDeMando Mineral)
@@ -55,13 +55,16 @@
         (necesita Barracones Mineral)
         (necesita ExtractorGas Mineral)
         
-        (necesita BahiaIngenieria Gas)
+        ;(necesita BahiaIngenieria Gas)
         (necesita BahiaIngenieria Mineral)
         
         (necesitaUnidad VCE Mineral)
         (necesitaUnidad Marine Mineral)
         (necesitaUnidad Segador Mineral)
         (necesitaUnidad Segador Gas)
+
+        (necesitaInvestigar Segador Gas)
+        (necesitaInvestigar Segador Mineral)
         
         (puedeReclutar CentroDeMando VCE)
         (puedeReclutar Barracones Marine)

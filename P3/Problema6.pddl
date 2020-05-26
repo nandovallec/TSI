@@ -45,18 +45,19 @@
         
         (edificioEn mando1 loc2_2)
         (construido mando1)
+        (puedeReclutarEn VCE loc2_2)
         (hayEdificioEn loc2_2)
         (unidadEn vce1 loc2_2)
         (reclutada vce1)
         ;(unidadEn vce2 loc2_2)
         ;(unidadEn vce3 loc2_2)
 
-        (asignadoRecursoEn Mineral loc4_2)
-        (asignadoRecursoEn Mineral loc5_2)
-        (asignadoRecursoEn Mineral loc5_3)
+        (recursoEn Mineral loc4_2)
+        (recursoEn Mineral loc5_2)
+        (recursoEn Mineral loc1_3)
 
-        (asignadoRecursoEn Gas loc3_4)
-        (asignadoRecursoEn Gas loc4_1)
+        (recursoEn Gas loc3_4)
+        (recursoEn Gas loc4_1)
 
         (necesita CentroDeMando Gas)
         (necesita CentroDeMando Mineral)
@@ -250,7 +251,6 @@
             (unidadEn marine1 loc2_5)
             (unidadEn marine2 loc1_3)
             (unidadEn segador1 loc1_3)
-            ;(> (LimiteReserva) 300)
         )
     )
 )

@@ -17,12 +17,15 @@
 
         (unidadEn ?uni - Unidades ?loc - Localizaciones)                        ; Localizacion de unidad
         (edificioEn ?edi - Edificios ?loc - Localizaciones)                     ; Localizacion de edificio
-        (asignadoRecursoEn ?rec - tipoRecursos ?loc - Localizaciones)           ; Localizacion de recurso
+        (recursoEn ?rec - tipoRecursos ?loc - Localizaciones)           ; Localizacion de recurso
 
         (puedeReclutar ?tipo - tipoEdificios ?uni - tipoUnidades)
 
+        (puedeReclutarEn ?uni - tipoUnidades ?loc - Localizaciones)
+
         (faltaInvestigar ?tipo - tipoUnidades)                                  ; Se necesita ivnestigar apra desbloquear la unidad
         
+        (puedeInvestigar ?tipo - tipoUnidades)                                  ; Se necesita ivnestigar apra desbloquear la unidad
 ;        (SinCaminos)
         (reclutada ?uni - Unidades)
 
@@ -30,9 +33,11 @@
 
         (hayEdificioEn ?loc - Localizaciones)
 
+        (hayExtractor ?loc - Localizaciones)
+
         (hayCamino ?loc1 - Localizaciones ?loc2 - Localizaciones)            ; Camino entre dos puntos
 
-        (extrayendoEn ?vce - Unidades ?loc - Localizaciones)                    ; Se esta extrayendo en localizacion
+        (extraeLoc ?vce - Unidades ?loc - Localizaciones)                    ; Se esta extrayendo en localizacion
 
         (extraeRecurso ?vce - Unidades ?r -tipoRecursos)
 
@@ -54,7 +59,7 @@
             (and
                 (hayCamino ?loc1 ?loc2)
                 (unidadEn ?uni ?loc1)
-                (not (extrayendoEn ?uni ?loc1))
+                (not (extraeLoc ?uni ?loc1))
             )
         :effect
             (and
@@ -69,22 +74,17 @@
             (and
                 (unidadEn ?vce ?loc)
                 (unidadTipo ?vce VCE)
-                (not (extrayendoEn ?vce ?loc))
-                (asignadoRecursoEn ?r ?loc)
-                ;(recursoTipo ?rec ?r)
+                (not (extraeLoc ?vce ?loc))
+                (recursoEn ?r ?loc)
+
                 (or 
                     (= ?r Mineral) 
-                    (exists (?edi - Edificios)
-                        (and
-                            (edificioEn ?edi ?loc)
-                            (edificioTipo ?edi ExtractorGas) 
-                        )
-                    )
+                    (hayExtractor ?loc)
                 )
             )
         :effect 
             (and
-                (extrayendoEn ?vce ?loc)
+                (extraeLoc ?vce ?loc)
                 (extraeRecurso ?vce ?r)
             )
     )
@@ -93,12 +93,12 @@
         :parameters (?vce - Unidades ?loc - Localizaciones ?r - tipoRecursos)
         :precondition
             (and
-                (extrayendoEn ?vce ?loc)         ; comprueba si esta extrayendo
-                (asignadoRecursoEn ?r ?loc)    ; y que recurso esta generando
+                (extraeLoc ?vce ?loc)         ; comprueba si esta extrayendo
+                (recursoEn ?r ?loc)    ; y que recurso esta generando
             )
         :effect
             (and
-                (not (extrayendoEn ?vce ?loc))  ; desasigna el vce del recurso en el que estaba
+                (not (extraeLoc ?vce ?loc))  ; desasigna el vce del recurso en el que estaba
                 (not (extraeRecurso ?vce ?r))
             )
     )
@@ -110,10 +110,10 @@
                 ;(exists (?vce - Unidades)
                  ;   (extraeRecurso ?vce ?r)
                 ;)
-                (<
+                (<=
                     (+
                     (Reserva ?r)
-                     25)
+                     15)
                     (LimiteReserva)
                 )
             )
@@ -121,10 +121,12 @@
             (and
                 (forall (?vce - Unidades)
                     (when (and(extraeRecurso ?vce ?r))
-                        (and(increase (Reserva ?r) 25))
+                        (and(increase (Reserva ?r) 15))
                     )
                 )
-                
+                (when (> (Reserva ?r) (LimiteReserva))
+                    (assign (Reserva ?r) (LimiteReserva))
+                )
             )
     )
 
@@ -134,7 +136,7 @@
             (and
                 (unidadTipo ?vce VCE)                                           ; la unidad tiene que ser un VCE
                 (unidadEn ?vce ?loc)                                            ; la unidad tiene que estar en la localizacion requerida
-                (not (extrayendoEn ?vce ?loc))                                  ; no puede estar ocupada extrayendo
+                (not (extraeLoc ?vce ?loc))                                  ; no puede estar ocupada extrayendo
                 
                 (not(hayEdificioEn ?loc))   
                 
@@ -174,21 +176,26 @@
                            
                     (and (decrease (Reserva Mineral) 150)
                          (decrease (Reserva Gas) 50)
+                         (puedeReclutarEn VCE ?loc)
                     )
                 )
                 (when  (edificioTipo ?edi Barracones)
                            
                     (and (decrease (Reserva Mineral) 150)
+                         (puedeReclutarEn Marine ?loc)
+                         (puedeReclutarEn Segador ?loc)
                     )
                 )
                 (when  (edificioTipo ?edi ExtractorGas)
                            
                     (and (decrease (Reserva Mineral) 75)
+                         (hayExtractor ?loc)
                     )
                 )
                 (when  (edificioTipo ?edi BahiaIngenieria)
                            
                     (and (decrease (Reserva Mineral) 125)
+                         (puedeInvestigar Segador)
                     )
                 )
                 (when  (edificioTipo ?edi Deposito)
@@ -202,47 +209,47 @@
     )
     
     (:action Reclutar
-        :parameters (?uniCreada - Unidades ?tipoUni - tipoUnidades  ?loc - Localizaciones)
+        :parameters (?uniCreada - Unidades   ?loc - Localizaciones)
         :precondition
             (and
-                (unidadTipo ?uniCreada ?tipoUni)                                ; la unidad creada tiene que ser de su tipo
+                                                ; la unidad creada tiene que ser de su tipo
                 (not(reclutada ?uniCreada))                             
-                (not (faltaInvestigar ?tipoUni))
                 
-                
-                (or
-                    (and (= ?tipoUni VCE)
-                           (>= (Reserva Mineral) 50)
-                    )
-                    (and (= ?tipoUni Marine)
-                           (>= (Reserva Mineral) 50)
-                    )
-                    (and (= ?tipoUni Segador)
-                           (>= (Reserva Mineral) 50)
-                           (>= (Reserva Gas) 50)
+                (exists (?tipoUni - tipoUnidades)
+                    (and
+                        (puedeReclutarEn ?tipoUni ?loc)
+                        (unidadTipo ?uniCreada ?tipoUni)
+                        (not (faltaInvestigar ?tipoUni))
+                        (or
+                            (and (= ?tipoUni VCE)
+                                (>= (Reserva Mineral) 50)
+                            )
+                            (and (= ?tipoUni Marine)
+                                (>= (Reserva Mineral) 50)
+                            )
+                            (and (= ?tipoUni Segador)
+                                (>= (Reserva Mineral) 50)
+                                (>= (Reserva Gas) 50)
+                            )
+                        )
                     )
                 )
 
-                (exists (?edi - Edificios  ?tipoE - tipoEdificios)
-                    (and
-                        (puedeReclutar ?tipoE ?tipoUni)
-                        (edificioTipo ?edi ?tipoE)
-                        (edificioEn ?edi ?loc)
-                    )
-                )
+
+
             )
         :effect
             (and
-                (when (= ?tipoUni VCE)
+                (when (unidadTipo ?uniCreada VCE)
                     (and (decrease (Reserva Mineral) 50)
                     )
                     
                 )
-                (when (= ?tipoUni Marine)
+                (when (unidadTipo ?uniCreada Marine)
                     (and (decrease (Reserva Mineral) 50)
                     )
                 )
-                (when (= ?tipoUni Segador)
+                (when (unidadTipo ?uniCreada Segador)
                     (and (decrease (Reserva Mineral) 50)
                          (decrease (Reserva Gas) 50)
                 )
@@ -259,12 +266,7 @@
             (and
                 (>= (Reserva Gas) 200)
                 (>= (Reserva Mineral) 50)
-                (exists (?edi - Edificios ?loc - Localizaciones )
-                    (and
-                        (edificioTipo ?edi BahiaIngenieria)
-                        (edificioEn ?edi ?loc)
-                    )
-                )
+                (puedeInvestigar ?tipoUni)
                 (faltaInvestigar ?tipoUni)
      
             )
@@ -275,31 +277,7 @@
                 (decrease (Reserva Mineral) 50)
             )
     )
-    
 
-    
-    
-
-;    (:action CrearCamino
-;       :parameters()
-;        :precondition
-;            (and
-;                (SinCaminos)
-;            )
-;        :effect
-;            (and
-;                (forall (?l1 - Localizaciones)
-;                    (forall (?l2 - Localizaciones)
-;                        (when (and(not (hayCamino ?l1 ?l2 ) ))
-;                            (hayCamino ?l1 ?l2)
-;                        )
-;                    )
-;                )
-;                (not(SinCaminos))
-;            )
-;    
-;    )
-    
     
 )
 

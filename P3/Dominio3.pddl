@@ -18,16 +18,19 @@
 
         (unidadEn ?uni - Unidades ?loc - Localizaciones)                        ; Localizacion de unidad
         (edificioEn ?edi - Edificios ?loc - Localizaciones)                     ; Localizacion de edificio
-        (asignadoRecursoEn ?rec - tipoRecursos ?loc - Localizaciones)           ; Localizacion de recurso
+        (recursoEn ?rec - tipoRecursos ?loc - Localizaciones)           ; Localizacion de recurso
+
 
 
 ;        (SinCaminos)
 
         (hayCamino ?loc1 - Localizaciones ?loc2 - Localizaciones)            ; Camino entre dos puntos
 
-        (extrayendoEn ?vce - Unidades ?loc - Localizaciones)                    ; Se esta extrayendo en localizacion
+        (extraeLoc ?vce - Unidades ?loc - Localizaciones)                    ; Se esta extrayendo en localizacion
 
         (necesita ?edi - tipoEdificios ?rec - tipoRecursos)                     ; Edificio necesita recurso
+    
+    
     )
     
     (:action Navegar
@@ -36,7 +39,7 @@
             (and
                 (hayCamino ?loc1 ?loc2)
                 (unidadEn ?uni ?loc1)
-                (not (extrayendoEn ?uni ?loc1))
+                (not (extraeLoc ?uni ?loc1))
             )
         :effect
             (and
@@ -51,14 +54,14 @@
             (and
                 (unidadEn ?vce ?loc)
                 (unidadTipo ?vce VCE)
-                (not (extrayendoEn ?vce ?loc))
-                (asignadoRecursoEn ?r ?loc)
+                (not (extraeLoc ?vce ?loc))
+                (recursoEn ?r ?loc)
                 (recursoTipo ?rec ?r)
                 (or (recursoTipo ?rec Mineral) (edificioEn extractorGas1 ?loc))
             )
         :effect 
             (and
-                (extrayendoEn ?vce ?loc)
+                (extraeLoc ?vce ?loc)
             )
     )
 
@@ -68,8 +71,18 @@
             (and
                 (unidadTipo ?vce VCE)                                           ; la unidad tiene que ser un VCE
                 (unidadEn ?vce ?loc)                                            ; la unidad tiene que estar en la localizacion requerida
-                (not (extrayendoEn ?vce ?loc))                                  ; no puede estar ocupada extrayendo
-                (not (edificioEn ?otro ?loc))                                   ; no puede haber ya un edificio
+                (not (extraeLoc ?vce ?loc))                                  ; no puede estar ocupada extrayendo
+
+                (not (exists (?otro - Edificios)
+                        (edificioEn ?otro ?loc)
+                      )
+                )   
+                
+                (not (exists (?otraLoc - Localizaciones)
+                        (edificioEn ?edi ?otraLoc)
+                      )
+                )       
+                                         ; no puede haber ya un edificio
                 (edificioTipo ?edi ?tipoE)
                 
                 (forall (?rec - tipoRecursos)
@@ -77,8 +90,8 @@
                         (not(necesita ?tipoE ?rec))
                         (exists (?vce2 - Unidades ?loc2 - Localizaciones )
                             (and
-                                (extrayendoEn ?vce2 ?loc2)
-                                (asignadoRecursoEn ?rec ?loc2)
+                                (extraeLoc ?vce2 ?loc2)
+                                (recursoEn ?rec ?loc2)
                                 (necesita ?tipoE ?rec)
                             )
                         )  
