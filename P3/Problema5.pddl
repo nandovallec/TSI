@@ -1,6 +1,7 @@
 ﻿(define (problem starcraft)
     (:domain ejercicio1)
     (:objects 
+        ; Declaracion de objetos
         loc1_1 loc1_2 loc1_3 loc1_4 loc1_5 loc2_1 loc2_2 loc2_3 loc2_4 loc2_5 loc3_1 loc3_2 loc3_3 loc3_4 loc3_5 loc4_1 loc4_2 loc4_3 loc4_4 loc4_5 loc5_1 loc5_2 loc5_3 loc5_4 loc5_5 - Localizaciones
         
         mando1 - Edificios
@@ -18,6 +19,7 @@
         bahia1 - Edificios
     )
     (:init
+        ; Asignar tipo a cada objeto
         (unidadTipo vce1 VCE)
         (unidadTipo vce2 VCE)
         (unidadTipo vce3 VCE)
@@ -33,10 +35,11 @@
 
         (edificioTipo barracon1 Barracones)
         (edificioTipo mando1 CentroDeMando)
+        
         (edificioTipo extractorGas1 ExtractorGas)
         (edificioTipo bahia1 BahiaIngenieria)
 
-        
+        ; Asignar localización (creado) a cada objeto
         (edificioEn mando1 loc2_2)
         (unidadEn vce1 loc2_2)
         ;(unidadEn vce2 loc2_2)
@@ -49,6 +52,7 @@
         (recursoEn Gas loc3_4)
         (recursoEn Gas loc3_5)
 
+        ; Asignar recursos necesarios para casos de acciones
         (necesita CentroDeMando Gas)
         (necesita CentroDeMando Mineral)
 
@@ -62,16 +66,18 @@
         (necesitaUnidad Marine Mineral)
         (necesitaUnidad Segador Mineral)
         (necesitaUnidad Segador Gas)
-
-        (necesitaInvestigar Segador Gas)
-        (necesitaInvestigar Segador Mineral)
         
         (puedeReclutar CentroDeMando VCE)
         (puedeReclutar Barracones Marine)
         (puedeReclutar Barracones Segador)
+
+        (necesitaInvestigar Segador Gas)
+        (necesitaInvestigar Segador Mineral)
         
+        ; Tipos de unidades bloqueadas hasta investigacion
         (faltaInvestigar Segador)
 
+        ; Conexiones entre localizaciones
         (hayCamino loc1_1 loc2_1)
         (hayCamino loc2_1 loc1_1)
         (hayCamino loc1_1 loc1_2)

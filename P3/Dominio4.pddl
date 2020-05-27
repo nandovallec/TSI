@@ -1,5 +1,5 @@
 ﻿(define (domain ejercicio1)
-    (:requirements :strips :typing)
+    (:requirements :strips :typing :disjunctive-preconditions :negative-preconditions)
     (:types
         Unidades Edificios Localizaciones Recurso - object      ; Tipo de objetos
         tipoUnidades tipoEdificios tipoRecursos - constants     ; Tipos posibles de objetos
@@ -20,7 +20,9 @@
         (edificioEn ?edi - Edificios ?loc - Localizaciones)                     ; Localizacion de edificio
         (recursoEn ?rec - tipoRecursos ?loc - Localizaciones)           ; Localizacion de recurso
 
-        (puedeReclutar ?tipo - tipoEdificios ?uni - tipoUnidades)
+        (puedeReclutar ?tipo - tipoEdificios ?uni - tipoUnidades)               ; Que tipo de edificio puede reclutar que tipo de unidad
+
+
 
 ;        (SinCaminos)
 
@@ -57,7 +59,12 @@
                 (not (extraeLoc ?vce ?loc))
                 (recursoEn ?r ?loc)
                 (recursoTipo ?rec ?r)
-                (or (recursoTipo ?rec Mineral) (edificioEn extractorGas1 ?loc))
+                (or
+                 (recursoTipo ?rec Mineral)
+                 (exists (?edi - Edificios)
+                    (and(edificioEn ?edi ?loc) (edificioTipo ?edi ExtractorGas))
+                 )
+                )  ; si el recurso es de tipo Gas se comprueba que haya un extractor construido
             )
         :effect 
             (and
@@ -73,19 +80,19 @@
                 (unidadEn ?vce ?loc)                                            ; la unidad tiene que estar en la localizacion requerida
                 (not (extraeLoc ?vce ?loc))                                  ; no puede estar ocupada extrayendo
                 
-                (not (exists (?otro - Edificios)
+                (not (exists (?otro - Edificios)                                ; no hay otro edificio
                         (edificioEn ?otro ?loc)
                       )
                 )   
                 
-                (not (exists (?otraLoc - Localizaciones)
+                (not (exists (?otraLoc - Localizaciones)                         ; no ha sido construido antes
                         (edificioEn ?edi ?otraLoc)
                       )
                 )
                 
                 (edificioTipo ?edi ?tipoE)
                 
-                (forall (?rec - tipoRecursos)
+                (forall (?rec - tipoRecursos)                                   ; itera sobre recursos y si se necesitan comprueba que existan
                     (or 
                         (not(necesita ?tipoE ?rec))
                         (exists (?vce2 - Unidades ?loc2 - Localizaciones )
@@ -115,11 +122,11 @@
                         (unidadEn ?uniCreada ?otraLoc)
                       )
                 )                             
-                (puedeReclutar ?tipoE ?tipoUni)
+                (puedeReclutar ?tipoE ?tipoUni)                                  ; comprueba que exista un edificio que puede reclutar la unidad en la misma loc
                 (edificioTipo ?edi ?TipoE)
                 (edificioEn ?edi ?locCrear)
 
-                (forall (?rec - tipoRecursos)
+                (forall (?rec - tipoRecursos)                                   ; itera sobre recursos y si se necesitan comprueba que existan
                     (or 
                         (not(necesitaUnidad ?tipoUni ?rec))
                         (exists (?vce - Unidades ?loc2 - Localizaciones )

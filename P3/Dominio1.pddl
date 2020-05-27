@@ -1,5 +1,5 @@
 ﻿(define (domain ejercicio1)
-    (:requirements :strips :typing)
+    (:requirements :strips :typing :negative-preconditions)
     (:types
         Unidades Edificios Localizaciones Recurso - object      ; Tipo de objetos
         tipoUnidades tipoEdificios tipoRecursos - constants     ; Tipos posibles de objetos
@@ -66,19 +66,19 @@
             (and
                 (unidadTipo ?vce VCE)                                           ; la unidad tiene que ser un VCE
                 (unidadEn ?vce ?loc)                                            ; la unidad tiene que estar en la localizacion requerida
-                (not (extraeLoc ?vce ?loc))                                  ; no puede estar ocupada extrayendo
+                (not (extraeLoc ?vce ?loc))                                     ; no puede estar ocupada extrayendo
 
-                (not (exists (?otro - Edificios)
+                (not (exists (?otro - Edificios)                                ; no hay otro edificio
                         (edificioEn ?otro ?loc)
                       )
                 )   
-                
-                (not (exists (?otraLoc - Localizaciones)
+
+                (not (exists (?otraLoc - Localizaciones)                         ; no ha sido construido antes
                         (edificioEn ?edi ?otraLoc)
                       )
                 )
                 (exists (?vce2 - Unidades ?rec - tipoRecursos ?loc2 - Localizaciones ?tipoE - tipoEdificios)
-                    (and
+                    (and                                                          ; comprobar recursos
                         (extraeLoc ?vce2 ?loc2)
                         (recursoEn ?rec ?loc2)
                         (necesita ?tipoE ?rec)

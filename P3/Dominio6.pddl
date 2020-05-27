@@ -19,33 +19,33 @@
         (edificioEn ?edi - Edificios ?loc - Localizaciones)                     ; Localizacion de edificio
         (recursoEn ?rec - tipoRecursos ?loc - Localizaciones)           ; Localizacion de recurso
 
-        (puedeReclutar ?tipo - tipoEdificios ?uni - tipoUnidades)
+        (puedeReclutar ?tipo - tipoEdificios ?uni - tipoUnidades)               ; Que tipo de edificio puede reclutar que tipo de unidad
 
-        (puedeReclutarEn ?uni - tipoUnidades ?loc - Localizaciones)
+        (puedeReclutarEn ?uni - tipoUnidades ?loc - Localizaciones)               ; Donde se puede reclutar que tipo de unidad
 
         (faltaInvestigar ?tipo - tipoUnidades)                                  ; Se necesita ivnestigar apra desbloquear la unidad
         
         (puedeInvestigar ?tipo - tipoUnidades)                                  ; Se necesita ivnestigar apra desbloquear la unidad
 ;        (SinCaminos)
-        (reclutada ?uni - Unidades)
+        (reclutada ?uni - Unidades)                                              ; La unidad ya ha sido reclutada
 
-        (construido ?edi - Edificios)
+        (construido ?edi - Edificios)                                            ; El edificio ya ha sido construido
 
-        (hayEdificioEn ?loc - Localizaciones)
+        (hayEdificioEn ?loc - Localizaciones)                                       ; Existe un edificio en una localizacion
 
-        (hayExtractor ?loc - Localizaciones)
+        (hayExtractor ?loc - Localizaciones)                                                ; Existe un extractor en la localizacion
 
         (hayCamino ?loc1 - Localizaciones ?loc2 - Localizaciones)            ; Camino entre dos puntos
 
         (extraeLoc ?vce - Unidades ?loc - Localizaciones)                    ; Se esta extrayendo en localizacion
 
-        (extraeRecurso ?vce - Unidades ?r -tipoRecursos)
+        (extraeRecurso ?vce - Unidades ?r -tipoRecursos)                            ; Que unidad está extrayendo que recurso
 
         (necesita ?edi - tipoEdificios ?rec - tipoRecursos)                     ; Edificio necesita recurso
         
         (necesitaUnidad ?tipo - tipoUnidades ?rec - tipoRecursos)               ; Unidad necesita recurso
         
-        (necesitaInvestigar ?tipo - tipoUnidades ?rec - tipoRecursos)
+        (necesitaInvestigar ?tipo - tipoUnidades ?rec - tipoRecursos)              ; Que recursos consuma realizar una investigacion
     )
     
     (:functions
@@ -80,7 +80,7 @@
                 (or 
                     (= ?r Mineral) 
                     (hayExtractor ?loc)
-                )
+                )  ; si el recurso es de tipo Gas se comprueba que haya un extractor construido
             )
         :effect 
             (and
@@ -105,15 +105,15 @@
     
     (:action Recolectar
         :parameters (?r - tipoRecursos)
-        :precondition                                                           ; Existe una unidad de tipo VCE en el punto, no está extrayendo, el recurso esta en la misma posicion
+        :precondition                                                         
             (and
                 ;(exists (?vce - Unidades)
                  ;   (extraeRecurso ?vce ?r)
                 ;)
-                (<=
+                (<=                                         ; Al menos hay espacio para qué un trabajdor puede insertar su recolección (no es completamente necesaria pero reduce mucho planes infactibles)
                     (+
                     (Reserva ?r)
-                     15)
+                     10)
                     (LimiteReserva)
                 )
             )
@@ -121,7 +121,7 @@
             (and
                 (forall (?vce - Unidades)
                     (when (and(extraeRecurso ?vce ?r))
-                        (and(increase (Reserva ?r) 15))
+                        (and(increase (Reserva ?r) 10))
                     )
                 )
                 (when (> (Reserva ?r) (LimiteReserva))
@@ -138,13 +138,13 @@
                 (unidadEn ?vce ?loc)                                            ; la unidad tiene que estar en la localizacion requerida
                 (not (extraeLoc ?vce ?loc))                                  ; no puede estar ocupada extrayendo
                 
-                (not(hayEdificioEn ?loc))   
+                (not(hayEdificioEn ?loc))                                   ; no hay otro edificio
                 
-                (not(construido ?edi))
+                (not(construido ?edi))                         ; no ha sido construido antes
                 
                 (exists (?tipoE - tipoEdificios)
                     (and
-                        (edificioTipo ?edi ?tipoE)
+                        (edificioTipo ?edi ?tipoE)                      ; comprobar que existen los recursos para el tipo edificio
                         (or
                             (and (edificioTipo ?edi CentroDeMando)
                                 (>= (Reserva Mineral) 150)
@@ -215,7 +215,7 @@
                                                 ; la unidad creada tiene que ser de su tipo
                 (not(reclutada ?uniCreada))                             
                 
-                (exists (?tipoUni - tipoUnidades)
+                (exists (?tipoUni - tipoUnidades)                      ; comprobar que existen los recursos para el tipo unidad
                     (and
                         (puedeReclutarEn ?tipoUni ?loc)
                         (unidadTipo ?uniCreada ?tipoUni)
@@ -264,10 +264,10 @@
         :parameters(?tipoUni - tipoUnidades)
         :precondition
             (and
-                (>= (Reserva Gas) 200)
+                (>= (Reserva Gas) 200)                      ; comprobar que existen los recursos para investigar (como es solo segador no hace falta bucle)
                 (>= (Reserva Mineral) 50)
-                (puedeInvestigar ?tipoUni)
-                (faltaInvestigar ?tipoUni)
+                (puedeInvestigar ?tipoUni)                  ; existe un edificio que pueda investigar (como es solo segador significa que existe bahia de ingenieria)
+                (faltaInvestigar ?tipoUni)                  ; la unidad ha sido investigada
      
             )
         :effect
